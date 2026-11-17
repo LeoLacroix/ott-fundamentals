@@ -115,7 +115,7 @@ body {
 
 /* Chrome controls: quiet letterspaced text buttons, print-furniture style.
    Reason: stock bordered browser controls clash with the serif page (R-06). */
-.menu-btn, .theme-btn, .btn {
+.menu-btn, .theme-btn, .btn, .notes-btn {
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 600;
@@ -129,8 +129,10 @@ body {
   min-height: 44px;
   cursor: pointer;
 }
-.menu-btn:hover, .theme-btn:hover, .btn:hover { background: var(--bg-raised); }
-.menu-btn:active, .theme-btn:active, .btn:active { background: var(--border); }
+a.notes-btn { text-decoration: none; display: inline-flex; align-items: center; }
+.menu-btn:hover, .theme-btn:hover, .btn:hover, .notes-btn:hover { background: var(--bg-raised); }
+.menu-btn:active, .theme-btn:active, .btn:active, .notes-btn:active { background: var(--border); }
+.notes-btn[aria-current="page"] { color: var(--accent-ink); }
 
 .site-title {
   font-family: var(--serif);
@@ -400,6 +402,23 @@ h3.thesis-title .tnum {
   white-space: nowrap;
 }
 h3.thesis-title .grade { margin-left: 10px; }
+h5 .grade { margin-left: 8px; }
+
+/* Grade qualifier: the fine print of a compound note (e.g. "De fide in
+   regard to Sanctifying Grace and the Donum Immortalitatis"). Reason:
+   keeps the badge canonical for filtering while the print's own
+   qualification stays visible in the apparatus voice. */
+.grade-q {
+  display: block;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin-top: 4px;
+  white-space: normal;
+}
 
 h4 {
   font-size: 17px;
@@ -721,6 +740,156 @@ mark {
   padding: 14px 28px;
 }
 
+/* ------------------------------------------------ theological notes
+   Two surfaces: a whole-book browser at #/notes, and a filter bar that
+   reduces the open chapter to its graded theses. Furniture follows the
+   search results and the grade tag conventions already in the system. */
+
+.notes-lead { max-width: 62ch; }
+.notes-lead p {
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0 0 14px;
+}
+.notes-lead a { color: var(--accent-ink); }
+
+/* Note rows on the #/notes index: label + count on one line, gloss below.
+   Reason: same hairline-row rhythm as the home-page book list. */
+.note-rows { margin-top: 18px; border-bottom: 1px solid var(--border); }
+.note-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 18px;
+  align-items: baseline;
+  padding: 15px 2px 16px;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+.note-row:hover { background: var(--bg-raised); }
+.note-row:hover .nr-label { color: var(--accent-ink); }
+.nr-label {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.nr-count {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nr-gloss {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-top: 4px;
+  max-width: 62ch;
+}
+
+/* Group heads in a note list: the five Books. Reason: orients a long
+   list the way the home page does, by the book's own hierarchy. */
+.ng-title {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 30px 0 2px;
+}
+.note-group .result { padding: 12px 2px 14px; }
+
+/* Filter bar above a chapter. Reason: quiet sans apparatus set apart from
+   the serif text by hairlines, like a printed running head. */
+.thesis-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 2px 0 26px;
+  padding: 11px 0 12px;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--sans);
+}
+.tf-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.chip {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 11px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.chip:hover { background: var(--bg-raised); color: var(--ink); }
+/* Selected chip: the accent marks a real state (R-39). */
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.chip .c-n {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  margin-left: 5px;
+  opacity: 0.75;
+}
+.tf-status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sidebar: the grading scale as a study shelf. Reason: the TOC shows the
+   book's structure; this shows its other axis, one quiet line per grade. */
+.note-cloud { list-style: none; margin: 0; padding: 0; }
+.nc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 10px;
+  margin: 1px 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  border-radius: 3px;
+}
+.nc-item:hover { background: var(--bg-raised); color: var(--accent-ink); }
+.nc-item[aria-current="page"] {
+  background: var(--bg-raised);
+  border-left-color: var(--accent);
+}
+.nc-label {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+.nc-count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.nc-all { font-weight: 600; }
+
 /* ------------------------------------------------ responsive
    Below 900px the sidebar stops fitting beside the text: it becomes a
    drawer. Below 560px the type scale and padding step down. */
@@ -758,11 +927,12 @@ mark {
 }
 
 @media (max-width: 559px) {
-  /* the bar reflows to two rows: menu + title, then search + theme;
+  /* the bar reflows to two rows: menu + title, then notes + search + theme;
      nothing is clipped or shrunk below its tap size */
   .topbar-inner { flex-wrap: wrap; gap: 8px; padding: 4px 10px 6px; }
+  .menu-btn, .theme-btn, .notes-btn { padding: 12px 8px; }
   .site-title { font-size: 14px; }
-  .search-form { flex: 1 1 240px; min-width: 0; }
+  .search-form { flex: 1 1 160px; min-width: 0; }
   #search-input { font-size: 16px; } /* stops iOS focus zoom */
   .article p { font-size: 16.5px; }
   h3.thesis-title { font-size: 18px; }

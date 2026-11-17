@@ -2,8 +2,8 @@
 
 The full text of Ludwig Ott's *Fundamentals of Catholic Dogma* (4th ed., 1960;
 English edition edited by James Canon Bastible, translated by Patrick Lynch) as a
-static reading site with search, a navigable table of contents, and light, dark,
-and auto color themes.
+static reading site with search, a navigable table of contents, browsing and
+filtering by theological note, and light, dark, and auto color themes.
 
 ## Design
 
@@ -32,6 +32,21 @@ heads and folios. The scan itself lacks seven printed pages, all at Book
 boundaries: 12, 77, 78, 124, 218, 471 and 472. The corrigenda opener is an
 unnumbered insert, so the Bibliography ends on printed page 503 and the
 Index of Persons begins on 505.
+
+## Theological notes
+
+Every graded thesis carries its note from the print (de fide, sent. certa,
+sent. communis, and the rest of the book's scale) as a small-caps rubric badge,
+verified against the scan. The notes are browsable two ways:
+
+- **Whole-book browser** at `#/notes` (the *Notes* button in the header, or
+  the shelf under the table of contents): each grade with its count and a
+  gloss in Ott's own terms, then every thesis carrying it, grouped by Book,
+  each linking to its place in the text.
+- **Chapter filter**: chapters with three or more graded theses show a filter
+  bar above the text. Selecting grades (they combine) reduces the chapter to
+  its matching theses and their section headings - a skeleton view of what
+  the Church defines at each level of certainty. *All* restores the text.
 
 ## Run locally
 

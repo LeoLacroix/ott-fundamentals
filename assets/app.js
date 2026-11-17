@@ -12,6 +12,33 @@
   var searchIndex = [];     // {pi, bi, hay, title}
   var currentQuery = '';
 
+  // ------------------------------------------------ theological notes
+  /* The print edition grades each thesis with a note (de fide, sent. certa,
+     ...), carried in the g field of a block. This table fixes the display
+     order - the book's own scale, most to least certain, per the
+     Introduction, "The Theological Grades of Certainty" - plus one-line
+     glosses in Ott's own terms. */
+  var NOTES = [
+    { key: 'de-fide', label: 'De fide',
+      gloss: 'The highest degree of certainty: an immediately revealed truth, proposed by the Church as worthy of Divine faith; solemnly defined truths are de fide definita.' },
+    { key: 'fidei-proxima', label: 'Sent. fidei proxima',
+      gloss: 'A doctrine regarded by theologians generally as a truth of Revelation, but not yet finally promulgated as such by the Church.' },
+    { key: 'certa', label: 'Sent. certa',
+      gloss: 'A doctrine on which the Teaching Authority has not yet finally pronounced, but whose truth is guaranteed by its intrinsic connection with revealed truth.' },
+    { key: 'communis', label: 'Sent. communis',
+      gloss: 'Doctrine which in itself belongs to the field of free opinions, but which is accepted by theologians generally.' },
+    { key: 'communior', label: 'Sent. communior',
+      gloss: 'The more common of competing theological opinions.' },
+    { key: 'probabilis', label: 'Sent. probabilis',
+      gloss: 'A theological opinion of a lesser grade of certainty.' },
+    { key: 'probabilior', label: 'Sent. probabilior',
+      gloss: 'The more probable of competing theological opinions.' },
+    { key: 'pia', label: 'Sent. pia et probabilis',
+      gloss: 'A pious opinion, regarded as probable; the least degree of certainty.' }
+  ];
+  var noteForG = null;      // note label -> NOTES entry
+  var noteEntries = null;   // NOTES key -> [{pi, bi, secN, group}]
+
   // ------------------------------------------------ common helpers
   function $(id) { return document.getElementById(id); }
 
@@ -118,6 +145,21 @@
         searchIndex.push({ pi: pi, bi: bi, hay: hay.toLowerCase(), title: b.t === 'sh' ? b.x : p.title });
       });
     });
+
+    // theological note index: every graded block, in reading order
+    noteForG = {};
+    NOTES.forEach(function (n) { noteForG[n.label] = n; });
+    noteEntries = {};
+    book.pages.forEach(function (p, pi) {
+      var secN = null;
+      p.blocks.forEach(function (b, bi) {
+        if (b.t === 'sh') secN = b.n != null ? b.n : null;
+        var n = b.g ? noteForG[b.g] : null;
+        if (!n) return;
+        var e = { pi: pi, bi: bi, secN: secN, group: p.crumb.length ? p.crumb[0] : p.title };
+        (noteEntries[n.key] = noteEntries[n.key] || []).push(e);
+      });
+    });
   }
 
   // ------------------------------------------------ table of contents
@@ -210,11 +252,34 @@
     liB.appendChild(leafList(t.back));
     root.appendChild(liB);
 
+    // Theological notes: the book's own grading scale as a study shelf.
+    var liN = el('li', 'toc-group');
+    liN.appendChild(el('div', 'toc-label', 'Theological Notes'));
+    var cloud = el('ul', 'note-cloud');
+    var liAll = el('li');
+    var aAll = el('a', 'nc-item nc-all', 'All notes');
+    aAll.href = '#/notes';
+    liAll.appendChild(aAll);
+    cloud.appendChild(liAll);
+    NOTES.forEach(function (n) {
+      var entries = noteEntries[n.key] || [];
+      if (!entries.length) return;
+      var li = el('li');
+      var a = el('a', 'nc-item');
+      a.href = '#/notes/' + n.key;
+      a.appendChild(el('span', 'nc-label', n.label));
+      a.appendChild(el('span', 'nc-count', String(entries.length)));
+      li.appendChild(a);
+      cloud.appendChild(li);
+    });
+    liN.appendChild(cloud);
+    root.appendChild(liN);
+
     sidebar.appendChild(root);
   }
 
   function markCurrentToc(pageId) {
-    var links = $('sidebar').querySelectorAll('a.toc-item');
+    var links = $('sidebar').querySelectorAll('a.toc-item, a.nc-item');
     for (var i = 0; i < links.length; i++) {
       var isCur = links[i].getAttribute('href') === '#/' + pageId;
       if (isCur) links[i].setAttribute('aria-current', 'page');
@@ -299,6 +364,7 @@
           h.appendChild(document.createTextNode(b.x));
         }
         if (b.g) h.appendChild(el('span', 'grade', b.g));
+        if (b.g2) h.appendChild(el('span', 'grade-q', b.g2));
         sec.appendChild(h);
         node = sec;
       } else if (b.t === 'th') {
@@ -306,13 +372,14 @@
         node.dataset.bi = bi;
         node.textContent = b.x;
         if (b.g) {
-          var g = el('span', 'grade', b.g);
-          node.appendChild(g);
+          node.appendChild(el('span', 'grade', b.g));
+          if (b.g2) node.appendChild(el('span', 'grade-q', b.g2));
         }
       } else if (b.t === 'h4') {
         node = el('h4'); node.dataset.bi = bi; node.textContent = b.x;
       } else if (b.t === 'h5') {
         node = el('h5'); node.dataset.bi = bi; node.textContent = b.x;
+        if (b.g) node.appendChild(el('span', 'grade', b.g));
       } else if (b.t === 'h6') {
         node = el('h6'); node.dataset.bi = bi; node.textContent = b.x;
       } else if (b.t === 'fn') {
@@ -348,6 +415,9 @@
       art.appendChild(el('p', 'page-pp', 'Pp. ' + page.pp + ' ff.'));
     }
 
+    var filterBar = buildFilterBar(page);
+    if (filterBar) art.appendChild(filterBar);
+
     renderBlocks(page, art);
 
     // previous / next
@@ -371,6 +441,7 @@
     art.appendChild(nav);
 
     markCurrentToc(page.id);
+    $('notes-btn').removeAttribute('aria-current');
     document.title = page.title + ' \u00B7 Fundamentals of Catholic Dogma';
 
     if (targetBlock != null) {
@@ -400,6 +471,7 @@
     art.hidden = false;
     $('results').hidden = true;
     markCurrentToc(null);
+    $('notes-btn').removeAttribute('aria-current');
 
     // Title page, after the 1960 printing: author, title, rule-diamond
     // ornament, small-caps credits, edition lines.
@@ -476,6 +548,11 @@
       li.appendChild(a);
       ref.appendChild(li);
     });
+    var liN = el('li');
+    var aN = el('a', null, 'Theological Notes');
+    aN.href = '#/notes';
+    liN.appendChild(aN);
+    ref.appendChild(liN);
     contents.appendChild(ref);
 
     art.appendChild(contents);
@@ -492,6 +569,198 @@
       }
     }
     return node.id || null;
+  }
+
+  // ------------------------------------------------ theological notes views
+  /* Two surfaces share one index built in prepare(): a whole-book browser
+     (#/notes, #/notes/<grade>) and a per-chapter filter bar above the
+     text. The browser reuses the search-result row furniture; the filter
+     reduces a chapter to its graded theses ("skeleton view"). */
+
+  function buildFilterBar(page) {
+    var graded = page.blocks.filter(function (b) { return b.g && noteForG[b.g]; });
+    if (graded.length < 3) return null;
+
+    var present = [];
+    NOTES.forEach(function (n) {
+      var c = 0;
+      graded.forEach(function (b) { if (noteForG[b.g] === n) c++; });
+      if (c) present.push({ note: n, count: c });
+    });
+
+    var bar = el('div', 'thesis-filter');
+    bar.setAttribute('role', 'group');
+    bar.setAttribute('aria-label', 'Filter theses by theological note');
+    bar.appendChild(el('span', 'tf-label', 'Notes'));
+
+    var sel = null;                    // null = show all
+    var chips = [];
+    var status = el('span', 'tf-status');
+    status.setAttribute('role', 'status');
+
+    function refresh() {
+      var shown = applyPageFilter(page, sel);
+      for (var i = 0; i < chips.length; i++) {
+        var on = chips[i]._key ? (sel && sel[chips[i]._key]) : !sel;
+        chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      status.textContent = sel ? shown + ' of ' + graded.length + ' theses shown' : '';
+    }
+
+    function addChip(label, count, key) {
+      var c = el('button', 'chip');
+      c.type = 'button';
+      c._key = key || null;
+      c.appendChild(document.createTextNode(label));
+      if (count != null) c.appendChild(el('span', 'c-n', String(count)));
+      c.addEventListener('click', function () {
+        if (!key) {
+          sel = null;
+        } else {
+          sel = sel || {};
+          if (sel[key]) delete sel[key]; else sel[key] = true;
+          var any = false;
+          for (var k in sel) if (sel[k]) any = true;
+          if (!any) sel = null;
+        }
+        refresh();
+      });
+      c.setAttribute('aria-pressed', key ? 'false' : 'true');
+      bar.appendChild(c);
+      chips.push(c);
+    }
+
+    addChip('All', null, null);
+    present.forEach(function (p) { addChip(p.note.label, p.count, p.note.key); });
+    bar.appendChild(status);
+    return bar;
+  }
+
+  function applyPageFilter(page, sel) {
+    // Keep the graded blocks whose note is selected, plus the section
+    // headings that contain them; hide the rest of the chapter.
+    var show = {};
+    var count = 0;
+    var curSh = null;
+    page.blocks.forEach(function (b, bi) {
+      if (b.t === 'sh') curSh = bi;
+      var n = b.g ? noteForG[b.g] : null;
+      if (!n) return;
+      if (sel && !sel[n.key]) return;
+      show[bi] = true;
+      count++;
+      if (curSh != null && curSh !== bi) show[curSh] = true;
+    });
+    var art = $('article');
+    var nodes = art.querySelectorAll('[data-bi]');
+    for (var i = 0; i < nodes.length; i++) {
+      var bi = parseInt(nodes[i].getAttribute('data-bi'), 10);
+      nodes[i].hidden = sel ? !show[bi] : false;
+    }
+    return count;
+  }
+
+  function renderNotes(key) {
+    var art = $('article');
+    art.textContent = '';
+    art.hidden = false;
+    $('results').hidden = true;
+    markCurrentToc(null);
+    markNotesLink();
+    $('notes-btn').setAttribute('aria-current', 'page');
+
+    var note = null;
+    if (key) {
+      for (var i = 0; i < NOTES.length; i++) {
+        if (NOTES[i].key === key) { note = NOTES[i]; break; }
+      }
+    }
+    if (note) renderNoteList(note);
+    else renderNotesIndex();
+    window.scrollTo(0, 0);
+  }
+
+  function markNotesLink() {
+    var links = $('sidebar').querySelectorAll('a.nc-item');
+    var want = location.hash;
+    for (var i = 0; i < links.length; i++) {
+      var cur = links[i].getAttribute('href') === want;
+      if (cur) links[i].setAttribute('aria-current', 'page');
+      else links[i].removeAttribute('aria-current');
+      if (cur) links[i].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function renderNotesIndex() {
+    var art = $('article');
+    document.title = 'Theological Notes \u00B7 Fundamentals of Catholic Dogma';
+
+    art.appendChild(el('p', 'crumb', 'Theological grades'));
+    art.appendChild(el('h1', 'page-title', 'Theological Notes'));
+
+    var lead = el('div', 'notes-lead');
+    var p1 = el('p', null,
+      'Every thesis of the manual carries a theological note: a fixed label grading the degree of certainty that attaches to it in the teaching of the Church. The scale runs from the defined dogma down to the pious opinion, and it is the book\u2019s own signal system, printed in red beside each thesis.');
+    var p2 = el('p');
+    p2.appendChild(document.createTextNode('The grades are set out in the Introduction under '));
+    var a = el('a', null, 'The Theological Grades of Certainty');
+    a.href = '#/introduction/80';
+    p2.appendChild(a);
+    p2.appendChild(document.createTextNode('. Browse the theses of the whole book by grade:'));
+    lead.appendChild(p1);
+    lead.appendChild(p2);
+    art.appendChild(lead);
+
+    var rows = el('div', 'note-rows');
+    NOTES.forEach(function (n) {
+      var entries = noteEntries[n.key] || [];
+      if (!entries.length) return;
+      var row = el('a', 'note-row');
+      row.href = '#/notes/' + n.key;
+      row.appendChild(el('span', 'nr-label', n.label));
+      row.appendChild(el('span', 'nr-count', entries.length + (entries.length === 1 ? ' thesis' : ' theses')));
+      row.appendChild(el('span', 'nr-gloss', n.gloss));
+      rows.appendChild(row);
+    });
+    art.appendChild(rows);
+  }
+
+  function renderNoteList(note) {
+    var art = $('article');
+    var entries = noteEntries[note.key] || [];
+    document.title = note.label + ' \u00B7 Fundamentals of Catholic Dogma';
+
+    var crumb = el('p', 'crumb');
+    var back = el('a', null, 'Theological Notes');
+    back.href = '#/notes';
+    crumb.appendChild(back);
+    art.appendChild(crumb);
+
+    art.appendChild(el('h1', 'page-title', note.label));
+    art.appendChild(el('p', 'page-pp',
+      entries.length + (entries.length === 1 ? ' thesis' : ' theses') + ' carry this note.'));
+
+    var lastGroup = null;
+    var group = null;
+    entries.forEach(function (e) {
+      if (e.group !== lastGroup) {
+        lastGroup = e.group;
+        group = el('section', 'note-group');
+        group.appendChild(el('h2', 'ng-title', e.group));
+        art.appendChild(group);
+      }
+      var page = book.pages[e.pi];
+      var b = page.blocks[e.bi];
+      var a = el('a', 'result');
+      a.href = '#/' + page.id + '/' + e.bi;
+      var t = el('div', 'r-title');
+      if (e.secN != null) t.appendChild(el('span', 'r-num', '\u00A7 ' + e.secN));
+      var text = b.x.length > 300 ? b.x.slice(0, 300).replace(/\s+\S*$/, '') + ' \u2026' : b.x;
+      t.appendChild(document.createTextNode(text));
+      a.appendChild(t);
+      a.appendChild(el('div', 'r-crumb', page.crumb.concat(page.title).join(' \u203A ')));
+      group.appendChild(a);
+    });
   }
 
   // ------------------------------------------------ search
@@ -526,6 +795,7 @@
     res.hidden = false;
     res.textContent = '';
     markCurrentToc(null);
+    $('notes-btn').removeAttribute('aria-current');
     document.title = 'Search: ' + query + ' \u00B7 Fundamentals of Catholic Dogma';
 
     var terms = query.toLowerCase().split(/\s+/).filter(function (t) { return t.length >= 2; });
@@ -620,6 +890,12 @@
       return;
     }
     var parts = hash.split('/');
+    if (parts[0] === 'notes') {
+      var ninput = $('search-input');
+      if (document.activeElement !== ninput) ninput.value = '';
+      renderNotes(decodeURIComponent(parts[1] || ''));
+      return;
+    }
     var id = parts[0], block = parts[1] != null ? parseInt(parts[1], 10) : null;
     var page = pageById[id];
     if (!page) {
