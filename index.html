@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fundamentals of Catholic Dogma</title>
+<meta name="description" content="Ludwig Ott, Fundamentals of Catholic Dogma: full text with search.">
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('ott-theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') {
+    t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.dataset.theme = t;
+})();
+</script>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Crect%20width='16'%20height='16'%20fill='%231d1b18'/%3E%3Ctext%20x='8'%20y='12'%20font-family='Georgia'%20font-size='11'%20fill='%23c8a0a6'%20text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <button id="menu-btn" class="menu-btn" type="button" aria-expanded="false" aria-controls="sidebar">
+      <span class="menu-icon" aria-hidden="true"></span> Contents
+    </button>
+    <a class="site-title" href="#/" id="site-title">Fundamentals of Catholic Dogma</a>
+    <form id="search-form" class="search-form" role="search">
+      <label class="visually-hidden" for="search-input">Search the book</label>
+      <input id="search-input" type="search" placeholder="Search" autocomplete="off"
+             enterkeyhint="search" spellcheck="false">
+    </form>
+    <button id="theme-btn" class="theme-btn" type="button" aria-label="Switch color theme">Auto</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Table of contents"></nav>
+  <div id="overlay" class="overlay" hidden></div>
+  <main id="content" class="content" tabindex="-1">
+    <div class="state-loading" id="state-loading" role="status">
+      <p>Loading text</p>
+    </div>
+    <div class="state-error" id="state-error" hidden>
+      <p>The text could not be loaded.</p>
+      <button id="retry-btn" class="btn" type="button">Retry</button>
+    </div>
+    <article id="article" class="article" hidden></article>
+    <div id="results" class="results" hidden></div>
+  </main>
+</div>
+
+<footer class="footer">
+  <p id="footer-line"></p>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>
