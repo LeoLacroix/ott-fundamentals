@@ -34,7 +34,7 @@
   --border-soft: color-mix(in srgb, var(--border) 55%, transparent);
   --mark-bg: #f3dd9a;
   --mark-ink: #26221c;
-  --serif: Charter, 'Bitstream Charter', Cambria, Georgia, 'Times New Roman', serif;
+  --serif: Charter, 'Bitstream Charter', Cambria, Georgia, 'Times New Roman', 'Palatino Linotype', 'Noto Serif', 'DejaVu Serif', serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
