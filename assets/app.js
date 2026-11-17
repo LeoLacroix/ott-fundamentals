@@ -128,6 +128,23 @@
   }
 
   function buildToc() {
+    var sidebar = $('sidebar');
+    sidebar.textContent = '';
+
+    // Drawer head: labels the pane, carries the close control on mobile.
+    var head = el('div', 'drawer-head');
+    head.appendChild(el('span', 'drawer-title', 'Contents'));
+    var closeBtn = el('button', 'drawer-close');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Close contents');
+    closeBtn.appendChild(el('span', null, '\u00D7'));
+    closeBtn.addEventListener('click', function () {
+      closeDrawer();
+      menuBtn.focus();
+    });
+    head.appendChild(closeBtn);
+    sidebar.appendChild(head);
+
     var root = el('ul', 'toc-root');
     var t = book.toc;
 
@@ -193,8 +210,6 @@
     liB.appendChild(leafList(t.back));
     root.appendChild(liB);
 
-    var sidebar = $('sidebar');
-    sidebar.textContent = '';
     sidebar.appendChild(root);
   }
 
@@ -235,7 +250,7 @@
       });
   }
 
-  // Scripture index rows read "chapter, verse — page": only the page
+  // Scripture index rows read "chapter, verse, then page": only the page
   // number after the dash is a page reference, so only that links.
   function linkifyScriptureRefs(html) {
     return html.replace(/([\u2014\u2013]\s*)(\d{1,3})/g,
@@ -300,8 +315,11 @@
         node = el('h5'); node.dataset.bi = bi; node.textContent = b.x;
       } else if (b.t === 'h6') {
         node = el('h6'); node.dataset.bi = bi; node.textContent = b.x;
+      } else if (b.t === 'fn') {
+        // citation lifted from a page-bottom footnote of the print
+        node = el('p', 'fn'); node.dataset.bi = bi; node.textContent = b.x;
       } else {
-        node = el('p'); node.dataset.bi = bi; node.textContent = b.x;
+        node = el('p', bi === 0 ? 'opening' : null); node.dataset.bi = bi; node.textContent = b.x;
       }
       frag.appendChild(node);
     });
@@ -327,7 +345,7 @@
     art.appendChild(h1);
 
     if (page.kind === 'chapter' || page.kind === 'intro') {
-      art.appendChild(el('p', 'page-pp', 'Print pages ' + page.pp + ' ff.'));
+      art.appendChild(el('p', 'page-pp', 'Pp. ' + page.pp + ' ff.'));
     }
 
     renderBlocks(page, art);
@@ -367,6 +385,15 @@
     }
   }
 
+  function roman(n) {
+    var table = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+    var out = '';
+    for (var i = 0; i < table.length; i++) {
+      while (n >= table[i][0]) { out += table[i][1]; n -= table[i][0]; }
+    }
+    return out;
+  }
+
   function renderHome() {
     var art = $('article');
     art.textContent = '';
@@ -374,31 +401,44 @@
     $('results').hidden = true;
     markCurrentToc(null);
 
-    var h1 = el('h1', 'page-title', book.meta.title);
-    art.appendChild(h1);
+    // Title page, after the 1960 printing: author, title, rule-diamond
+    // ornament, small-caps credits, edition lines.
+    var tp = el('div', 'titlepage');
+    tp.appendChild(el('p', 'tp-author', book.meta.author));
+    tp.appendChild(el('h1', 'tp-title', book.meta.title));
+    var orn = el('div', 'tp-ornament');
+    orn.setAttribute('aria-hidden', 'true');
+    orn.appendChild(el('span', 'tp-diamond'));
+    tp.appendChild(orn);
+    var cred = el('p', 'tp-credits');
+    var l1 = el('span', 'line', 'Edited in English by ' + book.meta.editor);
+    var l2 = el('span', 'line', 'Translated by ' + book.meta.translator);
+    cred.appendChild(l1);
+    cred.appendChild(l2);
+    tp.appendChild(cred);
+    var edBits = book.meta.edition.split('(');
+    tp.appendChild(el('p', 'tp-edition', edBits[0].trim().replace(/,$/, '')));
+    if (edBits[1]) {
+      tp.appendChild(el('p', 'tp-edition', edBits[1].replace(/\)$/, '').trim()));
+    }
+    tp.appendChild(el('p', 'tp-original', 'From the German ' + book.meta.original));
+    art.appendChild(tp);
 
-    var meta = el('div', 'home-meta');
-    meta.textContent = book.meta.author + ' \u00B7 edited by ' + book.meta.editor +
-      ' \u00B7 translated by ' + book.meta.translator + ' \u00B7 ' + book.meta.edition;
-    art.appendChild(meta);
+    // Contents: the Introduction and the five Books as the featured list.
+    var contents = el('div', 'tp-contents');
+    var books = el('ul', 'tp-books');
 
-    var ul = el('ul', 'home-list');
-    book.toc.front.forEach(function (f, i) {
+    var liIntro = el('li');
+    var aIntro = el('a', 'tp-book tp-intro');
+    aIntro.href = '#/' + book.toc.body[0].id;
+    aIntro.appendChild(el('span', 'tp-book-title', 'Introduction'));
+    aIntro.appendChild(el('span', 'tp-count', '\u00A7\u00A7 1-9'));
+    liIntro.appendChild(aIntro);
+    books.appendChild(liIntro);
+
+    book.toc.body.slice(1).forEach(function (b, i) {
       var li = el('li');
-      var a = el('a', null, pageById[f.id].title);
-      a.href = '#/' + f.id;
-      li.appendChild(a);
-      ul.appendChild(li);
-    });
-    var li0 = el('li');
-    var a0 = el('a', null, 'Introduction');
-    a0.href = '#/' + book.toc.body[0].id;
-    a0.appendChild(el('span', 'sub', '\u00A7\u00A7 1-9'));
-    li0.appendChild(a0);
-    ul.appendChild(li0);
-    book.toc.body.slice(1).forEach(function (b) {
-      var li = el('li');
-      var a = el('a', null, b.title);
+      var a = el('a', 'tp-book');
       a.href = '#/' + firstLeaf(b);
       var count = 0;
       (function countTheses(n) {
@@ -407,11 +447,38 @@
           else if (c.id && pageById[c.id]) count += pageById[c.id].blocks.filter(function (x) { return x.t === 'sh'; }).length;
         });
       })(b);
-      a.appendChild(el('span', 'sub', count + ' numbered sections'));
+      a.appendChild(el('span', 'tp-num', roman(i + 1)));
+      a.appendChild(el('span', 'tp-book-title', b.title));
+      a.appendChild(el('span', 'tp-count', count + ' numbered sections'));
       li.appendChild(a);
-      ul.appendChild(li);
+      books.appendChild(li);
     });
-    art.appendChild(ul);
+    contents.appendChild(books);
+
+    // Front matter and reference as quiet link columns.
+    contents.appendChild(el('p', 'tp-label', 'Front matter'));
+    var fm = el('ul', 'tp-links');
+    book.toc.front.forEach(function (f) {
+      var li = el('li');
+      var a = el('a', null, pageById[f.id].title);
+      a.href = '#/' + f.id;
+      li.appendChild(a);
+      fm.appendChild(li);
+    });
+    contents.appendChild(fm);
+
+    contents.appendChild(el('p', 'tp-label', 'Reference'));
+    var ref = el('ul', 'tp-links');
+    book.toc.back.forEach(function (f) {
+      var li = el('li');
+      var a = el('a', null, pageById[f.id].title);
+      a.href = '#/' + f.id;
+      li.appendChild(a);
+      ref.appendChild(li);
+    });
+    contents.appendChild(ref);
+
+    art.appendChild(contents);
 
     document.title = 'Fundamentals of Catholic Dogma';
     window.scrollTo(0, 0);
@@ -484,7 +551,8 @@
     });
 
     if (!hits.length) {
-      res.appendChild(el('p', 'no-results', 'No results for "' + query + '".'));
+      var none = el('p', 'no-results', 'No results for "' + query + '". Check the spelling, or browse the contents.');
+      res.appendChild(none);
       return;
     }
 
@@ -501,9 +569,13 @@
       var page = book.pages[h.pi];
       var a = el('a', 'result');
       a.href = '#/' + page.id + (h.bi >= 0 ? '/' + h.bi : '');
-      var rTitle = el('div', 'r-title', h.title);
-      var rCrumb = el('div', 'r-crumb', page.crumb.concat(page.title).join(' \u203A '));
+      var rTitle = el('div', 'r-title');
       var block = h.bi >= 0 ? page.blocks[h.bi] : null;
+      if (block && block.t === 'sh' && block.n != null) {
+        rTitle.appendChild(el('span', 'r-num', '\u00A7 ' + block.n));
+      }
+      rTitle.appendChild(document.createTextNode(h.title));
+      var rCrumb = el('div', 'r-crumb', page.crumb.concat(page.title).join(' \u203A '));
       var rEx = el('div', 'r-excerpt');
       if (block) {
         rEx.innerHTML = excerptFor(block.x, terms);

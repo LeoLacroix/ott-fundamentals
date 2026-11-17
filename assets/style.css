@@ -1,36 +1,53 @@
 /* Fundamentals of Catholic Dogma: reading edition.
-   Design notes (antislop R-31):
-   - Dials: ENERGY 1 / RHYTHM 1 / MOTION 1. A reference text, not a landing page.
-   - Palette: warm paper, ink, one accent (deep liturgical red). No gradients.
-   - Type: serif for the book text (matches the 1955 printed manual);
-     system sans for interface labels only.
-   - Thesis statements are indented italics, mirroring the print edition.
-   - The only shadow is the mobile drawer (real elevation for an overlay). */
+   Design notes (antislop R-31, one-line reason per decision):
+
+   Design Read: a full-text reading edition of a 1960 dogmatics manual,
+   for students and readers of theology, in a "fine scholarly press"
+   visual language. Dials: ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+   - Palette: warm paper + ink + one accent (liturgical red). Reason: it is
+     the book's own world (TAN Books printing, red rubrics in missals).
+     2 cores + 1 accent (R-29). Dark mode is retuned as a lamplight study,
+     not a hex swap: cream ink, warm terracotta red, low-alpha hairlines.
+   - Type: system serif stack (Charter/Cambria/Georgia) for the book,
+     sans for interface labels only. Reason: matches the printed manual
+     and keeps the site a zero-dependency static build (R-06).
+   - Identity motif: book furniture. Title page, small-caps credits,
+     rubric-red grade tags, hairline rules, drop caps on prose openings,
+     Roman numerals for the five Books. Reason: borrowed from the print
+     edition, so it belongs to this product and no other (R-20).
+   - Thesis statements carry an accent left rule. Reason: it marks the
+     definitional dogma, the sentence the section exists to prove.
+   - The only shadows: the mobile drawer and the search focus ring.
+     Reason: real elevation for real overlays only (R-12).
+   - Motion: hover states and the jump-to-block flash only. Reason:
+     triggered feedback, no loops (R-19, MOTION 1). */
 
 :root {
   --bg: #f7f5f1;
-  --bg-raised: #efecE5;
-  --ink: #23201b;
-  --muted: #5f584e;
+  --bg-raised: #efece5;
+  --ink: #26221c;
+  --muted: #5d564a;
   --accent: #8c2130;
   --accent-ink: #7a1c2a;
   --border: #d8d2c6;
+  --border-soft: color-mix(in srgb, var(--border) 55%, transparent);
   --mark-bg: #f3dd9a;
-  --mark-ink: #23201b;
+  --mark-ink: #26221c;
   --serif: Charter, 'Bitstream Charter', Cambria, Georgia, 'Times New Roman', serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 html[data-theme="dark"] {
-  --bg: #171512;
-  --bg-raised: #201d19;
-  --ink: #d8d2c6;
-  --muted: #9a9184;
-  --accent: #d1929b;
-  --accent-ink: #dda5ad;
-  --border: #34302a;
-  --mark-bg: #5c4d22;
-  --mark-ink: #f0e9da;
+  --bg: #1a1713;
+  --bg-raised: #25211b;
+  --ink: #ded6c8;
+  --muted: #a89e8d;
+  --accent: #e07a62;
+  --accent-ink: #e5947f;
+  --border: #37322a;
+  --mark-bg: #5e5024;
+  --mark-ink: #f2ebdc;
 }
 
 * { box-sizing: border-box; }
@@ -44,6 +61,8 @@ body {
   font-family: var(--serif);
   line-height: 1.65;
 }
+
+::selection { background: var(--mark-bg); color: var(--mark-ink); }
 
 /* ------------------------------------------------ accessibility helpers */
 .visually-hidden {
@@ -88,47 +107,37 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 8px 16px;
+  padding: 6px 16px;
   min-height: 52px;
 }
 
+/* Chrome controls: quiet letterspaced text buttons, print-furniture style.
+   Reason: stock bordered browser controls clash with the serif page (R-06). */
 .menu-btn, .theme-btn, .btn {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--ink);
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 12px;
+  border: 0;
+  border-radius: 3px;
+  padding: 12px 12px;
   min-height: 44px;
   cursor: pointer;
 }
 .menu-btn:hover, .theme-btn:hover, .btn:hover { background: var(--bg-raised); }
-.menu-btn:active, .theme-btn:active, .btn:active { transform: none; background: var(--border); }
-
-.menu-icon {
-  display: inline-block;
-  vertical-align: -3px;
-  width: 16px; height: 12px;
-  margin-right: 7px;
-  border-top: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-}
-.menu-icon::before {
-  content: "";
-  display: block;
-  height: 2px;
-  margin: 3px 0;
-  background: currentColor;
-}
+.menu-btn:active, .theme-btn:active, .btn:active { background: var(--border); }
 
 .site-title {
   font-family: var(--serif);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
@@ -139,32 +148,46 @@ body {
 }
 .site-title:hover { color: var(--accent-ink); }
 
-.search-form { flex: 0 1 340px; }
+.search-form { position: relative; flex: 0 1 360px; }
 
+/* Magnifier glyph: the field's affordance, inline SVG in currentColor. */
+.search-glyph {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* Search field: inset paper. Reason: reads as a marginal note field
+   rather than a stock browser input. */
 #search-input {
   width: 100%;
   font-family: var(--sans);
   font-size: 15px;
   color: var(--ink);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 9px 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  padding: 9px 12px 9px 34px;
   min-height: 44px;
 }
+#search-input::placeholder { color: var(--muted); }
 #search-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 0;
-  border-color: transparent;
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
+#search-input:focus-visible { outline: none; }
 
-.theme-btn { min-width: 76px; text-align: center; }
+.theme-btn { min-width: 72px; text-align: center; }
 
 /* ------------------------------------------------ layout */
 .layout {
   display: grid;
-  grid-template-columns: 308px minmax(0, 1fr);
-  max-width: 1200px;
+  grid-template-columns: 304px minmax(0, 1fr);
+  max-width: 1240px;
   margin: 0 auto;
   align-items: start;
 }
@@ -174,7 +197,7 @@ body {
   top: 53px;
   height: calc(100dvh - 53px);
   overflow-y: auto;
-  padding: 10px 8px 40px 16px;
+  padding: 8px 8px 40px 16px;
   border-right: 1px solid var(--border);
   overscroll-behavior: contain;
   font-family: var(--sans);
@@ -185,15 +208,50 @@ body {
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgb(0 0 0 / 0.4);
+  background: rgb(12 10 8 / 0.55); /* Reason: dims the page enough to make the drawer modal */
   border: 0;
   padding: 0;
 }
 
 .content {
-  padding: 26px 28px 64px;
+  padding: 30px 34px 72px;
   min-width: 0;
 }
+
+/* ------------------------------------------------ drawer head (sidebar header) */
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.drawer-close {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-right: -8px;
+}
+.drawer-close:hover { background: var(--bg-raised); }
+.drawer-close:active { background: var(--border); }
 
 /* ------------------------------------------------ table of contents */
 .toc-root { list-style: none; margin: 0; padding: 0; }
@@ -202,7 +260,7 @@ body {
 .toc-label {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
   margin: 18px 10px 4px;
@@ -214,12 +272,14 @@ body {
   margin: 1px 0;
   font-size: 13.5px;
   line-height: 1.4;
-  color: var(--ink);
+  color: var(--muted);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 3px;
   border-left: 2px solid transparent;
 }
 .toc-item:hover { background: var(--bg-raised); color: var(--accent-ink); }
+/* Active marker: accent left rule + weight. Reason: marks the open page,
+   a real state, and survives when color alone would not (R-39). */
 .toc-item[aria-current="page"] {
   background: var(--bg-raised);
   border-left-color: var(--accent);
@@ -242,7 +302,7 @@ body {
   background: transparent;
   border: 0;
   border-left: 2px solid transparent;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
 }
 .toc-toggle:hover { background: var(--bg-raised); }
@@ -254,51 +314,73 @@ body {
 }
 .toc-group-depth-0 > .toc-toggle { font-size: 14.5px; }
 .toc-group-depth-2 .toc-item, .toc-group-depth-2 > .toc-toggle { padding-left: 20px; font-size: 13px; }
-.toc-group-depth-3 .toc-item, .toc-group-depth-3 > .toc-toggle { padding-left: 30px; font-size: 12.5px; color: var(--muted); }
+.toc-group-depth-3 .toc-item, .toc-group-depth-3 > .toc-toggle { padding-left: 30px; font-size: 12.5px; }
 .toc-group-depth-3 .toc-item[aria-current="page"] { color: var(--accent-ink); }
 
 .toc-children { display: none; }
 .toc-group.open > .toc-children { display: block; }
 
 /* ------------------------------------------------ article */
-.article { max-width: 70ch; }
+.article { max-width: 66ch; }
 
+/* Breadcrumb: quiet small-caps wayfinding line. Reason: it orients,
+   it must not compete with the title (VLM review). */
 .crumb {
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 6px;
+  margin: 0 0 10px;
 }
-.crumb a { color: var(--muted); text-decoration: none; }
-.crumb a:hover { color: var(--accent-ink); text-decoration: underline; }
-.crumb .sep { margin: 0 6px; opacity: 0.6; }
+.crumb .sep { margin: 0 5px; opacity: 0.55; }
 
 h1.page-title {
-  font-size: clamp(24px, 3.4vw, 32px);
-  line-height: 1.22;
+  font-size: clamp(27px, 4.4vw, 37px);
+  line-height: 1.16;
   font-weight: 700;
-  margin: 0 0 4px;
-  letter-spacing: -0.005em;
+  margin: 0 0 6px;
+  letter-spacing: -0.008em;
+  text-wrap: balance;
 }
 
+/* Print-page note: small-caps marginal furniture. Reason: scholarly
+   courtesy line, not a raw database field (VLM review). */
 .page-pp {
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 12px;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
   color: var(--muted);
-  margin: 0 0 22px;
+  margin: 0 0 24px;
 }
 
-section.thesis {
-  margin-top: 34px;
-  padding-top: 4px;
+/* Drop cap on prose openings. Reason: the classic book-opening device;
+   the identity motif carried from the title page into the text. */
+p.opening::first-letter {
+  float: left;
+  font-size: 3.35em;
+  line-height: 0.8;
+  font-weight: 700;
+  padding: 0.08em 0.14em 0 0;
+  color: var(--ink);
 }
-section.thesis:first-of-type { margin-top: 12px; }
+
+/* Thesis sections: hairline rule above. Reason: section furniture that
+   gives the long chapters rhythm (RHYTHM 2). */
+section.thesis {
+  margin-top: 38px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+section.thesis:first-of-type { margin-top: 16px; }
 
 h3.thesis-title {
-  font-size: 19px;
-  line-height: 1.3;
+  font-size: 20px;
+  line-height: 1.32;
   font-weight: 700;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 h3.thesis-title .tnum {
   color: var(--accent);
@@ -306,26 +388,32 @@ h3.thesis-title .tnum {
   margin-right: 4px;
 }
 
+/* Grade tag: the rubric. Reason: red small caps for DE FIDE and kin is
+   the missal convention; it is the book's own signal system. */
 .grade {
   font-family: var(--sans);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
   color: var(--accent);
   white-space: nowrap;
 }
-h3.thesis-title .grade { margin-left: 8px; }
+h3.thesis-title .grade { margin-left: 10px; }
 
 h4 {
-  font-size: 16.5px;
+  font-size: 17px;
   font-weight: 700;
-  margin: 26px 0 8px;
+  margin: 28px 0 8px;
 }
+/* Run-in heads ("1. Dogma"): small-caps label below the thesis heading.
+   Reason: the print edition's own sub-head treatment. */
 h5 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  margin: 20px 0 6px;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  margin: 22px 0 6px;
 }
 h6 {
   font-family: var(--serif);
@@ -338,17 +426,33 @@ h6 {
 .article p {
   margin: 0 0 14px;
   font-size: 17.5px;
+  line-height: 1.7;
   hyphens: none;
 }
 
+/* Thesis statement: indented italic with an accent rule. Reason: marks
+   the definitional sentence, the one the section exists to prove. */
 p.thesis-statement {
   font-style: italic;
-  margin: 2px 0 16px 1.8em;
-  position: relative;
+  margin: 2px 0 18px 1.6em;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent);
 }
 p.thesis-statement .grade {
   font-style: normal;
-  margin-left: 6px;
+  margin-left: 8px;
+}
+
+/* Source citations that stood at the page bottoms of the print. Reason: they
+   read as apparatus, not as body prose, so they are set smaller and muted
+   beside a hairline, like a scholarly footnote. */
+p.fn {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: -6px 0 14px 1.6em;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-soft);
 }
 
 .ix-list { margin: 0; padding: 0; list-style: none; }
@@ -356,7 +460,7 @@ p.thesis-statement .grade {
   font-size: 15px;
   line-height: 1.5;
   padding: 2.5px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-bottom: 1px solid var(--border-soft);
 }
 .ix-list li:last-child { border-bottom: 0; }
 .ix-list .ref { color: var(--accent-ink); text-decoration: none; cursor: pointer; }
@@ -380,12 +484,14 @@ mark {
   .flash { animation: none; background: var(--mark-bg); }
 }
 
+/* Prev/next: plain typographic links under a rule. Reason: book
+   pagination, not buttons (VLM review). */
 .page-nav {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 48px;
-  padding-top: 18px;
+  margin-top: 52px;
+  padding-top: 20px;
   border-top: 1px solid var(--border);
   font-family: var(--sans);
 }
@@ -393,46 +499,58 @@ mark {
   max-width: 46%;
   color: var(--ink);
   text-decoration: none;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 10px 2px;
   font-size: 13.5px;
-  line-height: 1.35;
+  line-height: 1.4;
   min-height: 44px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
 }
-.page-nav a:hover { background: var(--bg-raised); color: var(--accent-ink); }
-.page-nav .dir { display: block; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.page-nav a:hover { color: var(--accent-ink); }
+.page-nav a:hover .dir { color: var(--accent-ink); }
+.page-nav .dir {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
 .page-nav .next { margin-left: auto; text-align: right; }
 
 /* ------------------------------------------------ search results */
-.results { max-width: 72ch; }
+.results { max-width: 68ch; }
 
 .results-head {
   font-family: var(--sans);
   color: var(--muted);
-  font-size: 14px;
-  margin: 4px 0 18px;
+  font-size: 13.5px;
+  margin: 6px 0 14px;
 }
-.results-head strong { color: var(--ink); }
+.results-head strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 
 .result {
   display: block;
-  padding: 13px 2px 15px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 2px 16px;
+  border-bottom: 1px solid var(--border-soft);
   color: inherit;
   text-decoration: none;
 }
 .result:hover .r-title { color: var(--accent-ink); }
-.r-title { font-weight: 700; font-size: 16.5px; }
+.r-title { font-weight: 700; font-size: 17px; line-height: 1.35; }
+.r-num {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  margin-right: 7px;
+}
 .r-crumb {
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted);
-  margin: 2px 0 6px;
+  margin: 3px 0 7px;
 }
-.r-excerpt { font-size: 15.5px; line-height: 1.5; }
+.r-excerpt { font-size: 15.5px; line-height: 1.55; }
 
 .no-results { color: var(--muted); font-family: var(--sans); font-size: 15px; padding: 20px 0; }
 
@@ -444,28 +562,151 @@ mark {
   text-align: center;
   font-size: 15px;
 }
-.state-error .btn { margin-top: 14px; }
+.state-error .btn { margin-top: 14px; border: 1px solid var(--border); }
 
-/* ------------------------------------------------ home */
-.home-meta {
-  margin: 10px 0 30px;
-  color: var(--muted);
-  font-size: 15.5px;
-  font-family: var(--sans);
-  line-height: 1.6;
+/* ------------------------------------------------ title page (home) */
+/* Reason: the home page of a book site should be the book's title page;
+   centered folio composition, like the 1960 printing itself. */
+.titlepage {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 44px 24px 8px;
+  text-align: center;
 }
-.home-list { list-style: none; margin: 0; padding: 0; font-family: var(--sans); }
-.home-list li { margin: 0; }
-.home-list a {
-  display: block;
-  padding: 11px 4px;
+.tp-author {
+  font-family: var(--serif);
   font-size: 16px;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.22em;
+  margin: 0 0 12px;
+}
+.tp-title {
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+/* Ornament: rule, diamond, rule. Reason: the one centered device of the
+   printed title page, drawn in CSS, no image needed. */
+.tp-ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 300px;
+  margin: 24px auto 20px;
+}
+.tp-ornament::before, .tp-ornament::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--border);
+}
+.tp-diamond {
+  width: 7px; height: 7px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+.tp-credits {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-variant: small-caps;
+  letter-spacing: 0.13em;
+  line-height: 2.05;
+  margin: 0;
+}
+.tp-credits .line { display: block; }
+.tp-edition {
+  font-family: var(--serif);
+  font-size: 13.5px;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin: 14px 0 0;
+}
+.tp-original {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+/* Contents below the title page. */
+.tp-contents { max-width: 620px; margin: 30px auto 0; padding: 0 24px; }
+
+.tp-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 34px 0 4px;
+}
+
+/* The featured list: Introduction + the five Books with hanging Roman
+   numerals. Reason: the Books are the content's real hierarchy, so they
+   get the featured treatment while everything else stays quiet. */
+.tp-books { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--border); }
+.tp-book {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  column-gap: 16px;
+  align-items: baseline;
+  padding: 16px 2px;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+}
+.tp-book:hover .tp-book-title { color: var(--accent-ink); }
+.tp-num {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.tp-intro { grid-template-columns: 1fr; }
+.tp-book-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.tp-count {
+  grid-column: 2;
+  display: block;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.tp-intro .tp-count { grid-column: 1; }
+
+/* Front matter and reference: quiet link columns. */
+.tp-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  column-gap: 28px;
+}
+.tp-links a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 2px;
+  font-family: var(--sans);
+  font-size: 14px;
   color: var(--ink);
   text-decoration: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-soft);
 }
-.home-list a:hover { color: var(--accent-ink); }
-.home-list .sub { color: var(--muted); font-size: 13px; margin-left: 6px; }
+.tp-links a:hover { color: var(--accent-ink); }
 
 /* ------------------------------------------------ footer */
 .footer {
@@ -475,7 +716,7 @@ mark {
   color: var(--muted);
 }
 .footer p {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 14px 28px;
 }
@@ -491,7 +732,7 @@ mark {
     z-index: 50;
     width: min(84vw, 330px);
     height: 100dvh;
-    padding: 14px 10px calc(24px + env(safe-area-inset-bottom, 0px)) 14px;
+    padding: 12px 10px calc(24px + env(safe-area-inset-bottom, 0px)) 14px;
     background: var(--bg);
     border-right: 1px solid var(--border);
     box-shadow: 0 0 32px rgb(0 0 0 / 0.25); /* elevation: real overlay */
@@ -510,29 +751,38 @@ mark {
     align-items: center;
   }
   .toc-item { align-items: baseline; padding-top: 10px; padding-bottom: 10px; }
-  .content { padding: 18px 18px calc(48px + env(safe-area-inset-bottom, 0px)); }
+  .content { padding: 20px 20px calc(48px + env(safe-area-inset-bottom, 0px)); }
   .search-form { flex: 1 1 auto; }
+  .titlepage { padding-top: 30px; }
+  .tp-contents { margin-top: 22px; }
 }
 
 @media (max-width: 559px) {
   /* the bar reflows to two rows: menu + title, then search + theme;
      nothing is clipped or shrunk below its tap size */
-  .topbar-inner { flex-wrap: wrap; gap: 8px; padding: 6px 10px 8px; }
-  .site-title { font-size: 15px; }
+  .topbar-inner { flex-wrap: wrap; gap: 8px; padding: 4px 10px 6px; }
+  .site-title { font-size: 14px; }
   .search-form { flex: 1 1 240px; min-width: 0; }
   #search-input { font-size: 16px; } /* stops iOS focus zoom */
   .article p { font-size: 16.5px; }
-  h3.thesis-title { font-size: 17.5px; }
-  .content { padding: 14px 14px 40px; }
-  p.thesis-statement { margin-left: 1.2em; }
+  h3.thesis-title { font-size: 18px; }
+  .content { padding: 16px 16px 44px; }
+  p.thesis-statement { margin-left: 0.9em; }
+  p.opening::first-letter { font-size: 3.1em; }
+  .tp-book { grid-template-columns: 44px 1fr; column-gap: 12px; padding: 13px 2px; }
+  .tp-num { font-size: 21px; }
+  .tp-book-title { font-size: 17.5px; }
+  .titlepage { padding: 28px 16px 4px; }
+  .tp-contents { padding: 0 16px; }
   /* prev/next stack: two side-by-side 46% boxes are unreadably narrow */
   .page-nav { flex-direction: column; }
   .page-nav a { max-width: none; }
-  .page-nav .next { margin-left: 0; }
+  .page-nav .next { margin-left: 0; text-align: left; }
 }
 
 @media (min-width: 900px) {
   .menu-btn { display: none; }
+  .drawer-close { display: none; }
 }
 
 /* ------------------------------------------------ motion */
